@@ -1,39 +1,79 @@
-import React from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import logo from './logo.svg';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  Redirect
+} from "react-router-dom";
+
 import './App.css';
 
+import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
-import About from './pages/About';
+import Login from "./pages/Login";
+import ProvideAuth, { useAuth } from "./Context/ProvideAuth";
 
-function App() {
+export function PrivateRoute({ children, ...rest }) {
+  let auth = useAuth();
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+    <Route
+      {...rest}
+      render={({ location }) =>
+        auth.user ? (
+          children
+        ) : (
+            <Redirect
+              to={{
+                pathname: "/",
+                state: { from: location }
+              }}
+            />
+          )
+      }
+    />
+  );
+}
 
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+function PublicRoute({ children, ...rest }) {
+  let auth = useAuth();
+  console.log(auth);
+  return (
+    <Route
+      {...rest}
+      render={({ location }) =>
+        !auth.user ? (
+          children
+        ) : (
+            <Redirect
+              to={{
+                pathname: "/dashboard",
+                state: { from: location }
+              }}
+            />
+          )
+      }
+    />
+  );
+}
 
+export default function App() {
+  return (
+    <ProvideAuth>
       <Router>
         <Switch>
-          <Route path="/about">
-            <About />
-          </Route>
-          <Route path="/">
+          <PublicRoute exact path="/">
+            <Login />
+          </PublicRoute>
+          <PrivateRoute path="/dashboard">
+            <Dashboard />
+          </PrivateRoute>
+          <Route path="*">
             <Home />
           </Route>
         </Switch>
       </Router>
-    </div>
+    </ProvideAuth>
   );
 }
 
-export default App;
